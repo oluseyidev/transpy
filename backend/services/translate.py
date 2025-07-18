@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-async def translate_text(text, to_lang="en"):
+async def translate_text(text, to_lang="en", from_lang="yo"):
     endpoint = os.getenv("AZURE_TRANSLATOR_ENDPOINT")
     key = os.getenv("AZURE_TRANSLATOR_KEY")
 
@@ -14,7 +14,7 @@ async def translate_text(text, to_lang="en"):
         "Content-type": "application/json",
     }
 
-    params = {"api-version": "3.0", 'from': 'yo', "to": to_lang}
+    params = {"api-version": "3.0", "from": from_lang, "to": to_lang}
     body = [{"text": text}]
 
     async with httpx.AsyncClient() as client:
