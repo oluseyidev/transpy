@@ -48,3 +48,22 @@ async def speech_to_text(request: Request):
         return {"transcribed_text": text}
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
+
+
+@app.post("/speech-translate/")
+async def speech_translate(data: dict = Body(...)):
+    try:
+        audio = data["audio_base64"]
+        from_lang = data.get("from_lang", "en-US")
+        to_lang = data.get("to_lang", "en")
+
+        text = transcribe_speech(audio, from_lang)
+        translated = await translate_text(text, to_lang, from_lang.split("-")[0])
+        audio_b64 = synthesize_speech(translated, to_lang + "-NG")
+
+        return {
+            "translated_text": translated,
+            "audio_base64": audio_b64,
+        }
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
