@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nigerian Translator AI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h1>🗣️ Nigerian Language Translator</h1>
+
+    <button onclick="startRecording()">🎙️ Start</button>
+    <button onclick="stopRecording()">🛑 Stop</button>
+
+    <p id="transcribedText"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mic-recorder-to-mp3@2.2.1/dist/index.min.js"></script>
+  <script>
+    const recorder = new MicRecorder({ bitRate: 128, mimeType: 'audio/mpeg' });
+
+    async function startRecording() {
+      try {
+        await recorder.start();
+        console.log("Recording started...");
+      } catch (e) {
+        console.error("Mic access denied:", e);
+        alert("Please allow mic access");
+      }
+    }
+
+    async function stopRecording() {
+      try {
+        const [buffer, blob] = await recorder.stop().getMp3();
+        const base64Audio = await blobToBase64(blob);
+        console.log("Blob type:", blob.type);
+        console.log("Base64 audio preview:", base64Audio.substring(0, 100));
+
+        const res = await fetch("http://127.0.0.1:8000/speech-to-text/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            audio_base64: base64Audio,
+            language: "en-US"
+          })
+        });
+
+
+        const data = await res.json();
+        document.getElementById("transcribedText").innerText = data.transcribed_text || data.error || "No result";
+      } catch (e) {
+        console.error("Recording error:", e);
+      }
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result.split(',')[1];
+          resolve(base64data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
