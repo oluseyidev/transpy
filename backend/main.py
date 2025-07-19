@@ -39,11 +39,12 @@ async def speech_to_text(request: Request):
         if content_type == "application/json":
             payload = await request.json()
             audio_data = payload["audio_base64"]
-            language = payload.get("language", "en-US")
+            language = payload.get("language", "en")
         else:  # Assume raw audio
             audio_data = base64.b64encode(await request.body()).decode("utf-8")
-            language = request.headers.get("Language", "en-US")
+            language = request.headers.get("Language", "en")
             
+        print(f"[DEBUG] language: {language}")
         text = transcribe_speech(audio_data, language)
         return {"transcribed_text": text}
     except Exception as e:
@@ -55,11 +56,13 @@ async def speech_translate(data: dict = Body(...)):
     try:
         audio = data["audio_base64"]
         from_lang = data.get("from_lang", "en-US")
-        to_lang = data.get("to_lang", "en")
+        to_lang = "en-US"
 
         text = transcribe_speech(audio, from_lang)
+        print(f"[DEBUG] Transcribed text: {text}")
         translated = await translate_text(text, to_lang, from_lang.split("-")[0])
-        audio_b64 = synthesize_speech(translated, to_lang + "-NG")
+        print(f"[DEBUG] Translated text: {translated}")
+        audio_b64 = synthesize_speech(translated, to_lang)
 
         return {
             "translated_text": translated,

@@ -20,7 +20,7 @@
     <button onclick="startRecording()">Start Recording</button>
     <button onclick="stopRecording()">Stop</button>
 
-    <p id="transcribedText"></p>
+    <p id="transcribedText">dededed</p>
     <audio id="audioPlayer" controls></audio>
   </div>
 
@@ -52,7 +52,7 @@
           },
           body: JSON.stringify({
             audio_base64: base64Audio,
-            from_lang: 'yo-NG',
+            from_lang: 'yo',
             to_lang: toLang
           })
         });
