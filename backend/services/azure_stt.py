@@ -1,10 +1,18 @@
 from pydub import AudioSegment
 import azure.cognitiveservices.speech as speechsdk
-import os
+import torchaudio
+from .mms_transcriber import transcribe_with_mms
+from datetime import datetime
+from pathlib import Path
+import assemblyai as aai
+import openai
 import base64
 import tempfile
-import assemblyai as aai
+import os
 
+
+DEBUG_AUDIO_DIR = Path("audio_debug")
+DEBUG_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 def transcribe_speech_azure(audio_base64: str, language: str = "en-US") -> str:
     key = os.getenv("AZURE_SPEECH_KEY")
@@ -45,7 +53,7 @@ def transcribe_speech_azure(audio_base64: str, language: str = "en-US") -> str:
         raise Exception(f"Speech recognition error: {result.reason} — {result.cancellation_details.error_details}")
 
 
-def transcribe_speech(audio_base64: str, language: str = "en") -> str:
+def transcribe_speech_assemblyai(audio_base64: str, language: str = "en") -> str:
     aai.settings.api_key = os.getenv("ASSEMBLYAI_API_KEY")
     
     try:
@@ -70,3 +78,31 @@ def transcribe_speech(audio_base64: str, language: str = "en") -> str:
         raise RuntimeError(f"AssemblyAI error: {e}")
 
 
+def transcribe_speech(audio_base64: str, language: str) -> str:
+    print("[MMS] Decoding audio and converting to WAV...")
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_filename = f"{language}_{timestamp}"
+
+    mp3_path = DEBUG_AUDIO_DIR / f"{base_filename}.mp3"
+    wav_path = DEBUG_AUDIO_DIR / f"{base_filename}.wav"
+
+    # Save .mp3 from base64
+    audio_bytes = base64.b64decode(audio_base64)
+    with open(mp3_path, "wb") as f:
+        f.write(audio_bytes)
+    print(f"[DEBUG] MP3 saved at: {mp3_path.resolve()}")
+
+    # Load and resample
+    waveform, sr = torchaudio.load(str(mp3_path))
+    if waveform.shape[0] > 1:
+        waveform = waveform.mean(dim=0, keepdim=True)
+    if sr != 16000:
+        waveform = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)(waveform)
+        sr = 16000
+
+    # Save .wav for inspection
+    torchaudio.save(str(wav_path), waveform, sample_rate=16000)
+    print(f"[DEBUG] WAV saved at: {wav_path.resolve()}")
+
+    return transcribe_with_mms(waveform[0], language, sr)

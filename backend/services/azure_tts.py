@@ -1,9 +1,14 @@
 import azure.cognitiveservices.speech as speechsdk
-from azure.cognitiveservices.speech import (
-    SpeechConfig, SpeechSynthesizer, AudioConfig
-)
+from azure.cognitiveservices.speech import (SpeechConfig, SpeechSynthesizer, AudioConfig)
+from transformers import pipeline
+from scipy.io.wavfile import write as wav_write
+import tempfile
 import base64
+import torch
 import os
+import numpy as np
+import soundfile as sf
+
 
 class AudioBufferCallback(speechsdk.audio.PushAudioOutputStreamCallback):
     def __init__(self):
@@ -20,7 +25,7 @@ class AudioBufferCallback(speechsdk.audio.PushAudioOutputStreamCallback):
     def get_buffer(self):
         return bytes(self._buffer)
 
-def synthesize_speech(text, lang="en-US"):
+def synthesize_speech_azure(text, lang="en-US"):
     key = os.getenv("AZURE_SPEECH_KEY")
     region = os.getenv("AZURE_SPEECH_REGION")
 
@@ -66,3 +71,28 @@ def synthesize_speech(text, lang="en-US"):
     print(f"[DEBUG] Final audio length: {len(audio_buffer)} bytes")
 
     return base64.b64encode(audio_buffer).decode("utf-8")
+
+def synthesize_speech(text: str, lang_code: str = "yor") -> str:
+    print(f"[TTS] Synthesizing for '{text}' in language '{lang_code}'...")
+
+    model_id = f"facebook/mms-tts-{lang_code}"
+    tts = pipeline("text-to-speech", model=model_id)
+
+    output = tts(text)
+    audio = output["audio"]  # NumPy float32 array
+    sampling_rate = output["sampling_rate"]
+
+    # 🛠 Fix: ensure it's 1D float32
+    audio = np.asarray(audio, dtype=np.float32).flatten()
+
+    # 🛠 Fix: Write as raw PCM 16-bit WAV
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+        sf.write(tmp_file.name, audio, sampling_rate, format="WAV", subtype="PCM_16")
+        tmp_path = tmp_file.name
+    print(f"[TTS] Audio saved to: {tmp_path}")
+    
+    with open(tmp_path, "rb") as f:
+        audio_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+    os.remove(tmp_path)
+    return audio_base64

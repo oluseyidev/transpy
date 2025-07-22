@@ -1,7 +1,7 @@
 import base64
 from fastapi import FastAPI, Body, Request
 from services.azure_tts import synthesize_speech
-from services.azure_stt import transcribe_speech
+from services.azure_stt import transcribe_speech_azure, transcribe_speech_assemblyai, transcribe_speech
 from fastapi.responses import JSONResponse
 from services.translate import translate_text
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +21,9 @@ app.add_middleware(
 async def translate(data: dict = Body(...)):
     text = data["text"]
     to_lang = data["to_lang"]
-    result = await translate_text(text, to_lang)
+    print(f"[DEBUG] Translating '{text}' to '{to_lang}'...")
+    result = await translate_text(text, to_lang, from_lang="en")
+    print(f"[DEBUG] Translation result: {result}")
     return {"translated_text": result}
 
 @app.post("/speak/")
@@ -45,7 +47,7 @@ async def speech_to_text(request: Request):
             language = request.headers.get("Language", "en")
             
         print(f"[DEBUG] language: {language}")
-        text = transcribe_speech(audio_data, language)
+        text = transcribe_speech(audio_data, "yor")
         return {"transcribed_text": text}
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
@@ -55,13 +57,17 @@ async def speech_to_text(request: Request):
 async def speech_translate(data: dict = Body(...)):
     try:
         audio = data["audio_base64"]
-        from_lang = data.get("from_lang", "en-US")
-        to_lang = "en-US"
+        from_lang = data.get("from_lang", "eng")
+        to_lang = data.get("to_lang", "yor")
+
+        print(f"[DEBUG] From language: {from_lang}, To language: {to_lang}")
 
         text = transcribe_speech(audio, from_lang)
         print(f"[DEBUG] Transcribed text: {text}")
-        translated = await translate_text(text, to_lang, from_lang.split("-")[0])
+
+        translated = await translate_text(text, to_lang, from_lang)
         print(f"[DEBUG] Translated text: {translated}")
+
         audio_b64 = synthesize_speech(translated, to_lang)
 
         return {

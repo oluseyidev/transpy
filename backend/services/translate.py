@@ -13,8 +13,8 @@ async def translate_text(text, to_lang="en", from_lang="yo"):
         "Ocp-Apim-Subscription-Region": "eastus2",
         "Content-type": "application/json",
     }
-
-    params = {"api-version": "3.0", "from": from_lang, "to": to_lang}
+    print(f"[DEBUG] Translating '{text}' from '{from_lang[:2]}' to '{to_lang[:2]}'...")
+    params = {"api-version": "3.0", "from": from_lang[:2], "to": to_lang[:2]}
     body = [{"text": text}]
 
     async with httpx.AsyncClient() as client:

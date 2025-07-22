@@ -31,7 +31,7 @@ async function playAudio() {
     },
     body: JSON.stringify({
       text: currentTranslatedText,
-      language: selectedLang + "-NG"
+      language: selectedLang
     })
   });
 

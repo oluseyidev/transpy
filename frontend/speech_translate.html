@@ -10,17 +10,24 @@
   <div class="container">
     <h1>🎤 Speech Translator</h1>
 
-    <select id="targetLang">
-      <option value="en">English</option>
-      <option value="ha">Hausa</option>
-      <option value="yo">Yoruba</option>
-      <option value="ig">Igbo</option>
+    <select id="fromLang">
+      <option value="eng">English</option>
+      <option value="hau">Hausa</option>
+      <option value="yor">Yoruba</option>
+      <option value="igb">Igbo</option>
     </select>
 
     <button onclick="startRecording()">Start Recording</button>
     <button onclick="stopRecording()">Stop</button>
 
-    <p id="transcribedText">dededed</p>
+    <select id="targetLang">
+      <option value="eng">English</option>
+      <option value="hau">Hausa</option>
+      <option value="yor">Yoruba</option>
+      <option value="igb">Igbo</option>
+    </select>
+
+    <p id="transcribedText"></p>
     <audio id="audioPlayer" controls></audio>
   </div>
 
@@ -42,6 +49,7 @@
       try {
         const [buffer, blob] = await recorder.stop().getMp3();
         const base64Audio = await blobToBase64(blob);
+        const fromLang = document.getElementById('fromLang').value;
         const toLang = document.getElementById('targetLang').value;
 
         const res = await fetch('http://127.0.0.1:8000/speech-translate/', {
@@ -52,7 +60,7 @@
           },
           body: JSON.stringify({
             audio_base64: base64Audio,
-            from_lang: 'yo',
+            from_lang: fromLang,
             to_lang: toLang
           })
         });
