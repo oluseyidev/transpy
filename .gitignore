@@ -196,3 +196,4 @@ cython_debug/
 
 *audio_debug/
 /backend/services/text_correction.py
+test.html

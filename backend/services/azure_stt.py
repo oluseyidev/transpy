@@ -1,4 +1,3 @@
-from pydub import AudioSegment
 import azure.cognitiveservices.speech as speechsdk
 import torchaudio
 from .mms_transcriber import transcribe_with_mms
