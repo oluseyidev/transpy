@@ -1,7 +1,8 @@
 import base64
 from fastapi import FastAPI, Body, Request
+from fastapi.staticfiles import StaticFiles
 from services.azure_tts import synthesize_speech
-from services.azure_stt import transcribe_speech_azure, transcribe_speech_assemblyai, transcribe_speech
+from services.azure_stt import transcribe_speech
 from fastapi.responses import JSONResponse
 from services.translate import translate_text
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/frontend", StaticFiles(directory="../frontend"), name="frontend")
 
 @app.post("/translate/")
 async def translate(data: dict = Body(...)):
