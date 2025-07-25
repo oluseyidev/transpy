@@ -45,15 +45,8 @@ async function playAudio() {
 
   // ✅ Construct Data URI
   const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
-  const audio = new Audio(audioUrl);
-  console.log(audioUrl);
-
-  audio.addEventListener("error", (e) => {
-    console.error("Audio load/play error:", e);
-  });
-
-  audio.play().catch(err => {
-    console.error("Play error:", err);
-  });
+  const player = document.getElementById('audioPlayer');
+  player.src = audioUrl;
+  player.play().catch(err => console.error('Play error:', err));
 }
 
