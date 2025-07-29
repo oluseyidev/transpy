@@ -15,7 +15,7 @@ Repository: https://github.com/oluseyidev/speech-translator
 - 🗣️ **Voice Interpretation**: Reads out translated text using text-to-speech.
 - 📱 **Mobile-Friendly Interface**: Optimized for use in field environments with simple UI.
 - 🔊 **Offline Capability** (coming soon): To work in low-connectivity rural areas.
-- 🧠 Powered by DeepSeek, OpenAI & other modern language models.
+- 🧠 Powered by OpenAI & other modern language models.
 
 
 ## 🌾 Target Impact
